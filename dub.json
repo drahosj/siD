@@ -1,0 +1,9 @@
+{
+	"authors": [
+		"Jake Drahos"
+	],
+	"copyright": "Copyright © 2021, Jake Drahos",
+	"description": "Alternative implementation of Dis VM",
+	"license": "MIT",
+	"name": "sid"
+}
