@@ -3,6 +3,7 @@ import std.stdio;
 import sid.obj.core;
 import sid.obj.header;
 import sid.obj.inst;
+import sid.obj.type;
 import sid.mem.alloc;
 import sid.mod;
 
@@ -57,6 +58,17 @@ void dbg(DisInstruction inst) {
     writef("MODE %02x\n", inst.address_mode);
 }
 
+void dbg(DisTypeDesc desc) {
+    writefln("Index: %d", desc.desc_number);
+    writefln("Size: %d", desc.size);
+    writefln("Map size: %d", desc.number_ptrs);
+    write("Map: \"");
+    foreach (b; desc.map) {
+        writef("%02x", b);
+    }
+    writeln("\"");
+}
+
 void dbg(OpMode mode, int op_1, int op_2 = 0, string append=", ") {
     switch (mode) {
         case OpMode.IMMEDIATE:
@@ -102,6 +114,9 @@ void dbg(DisModule mod) {
 
     writeln("Type section:");
     writeln("Type Declarations: ", mod.type.array.length);
+    foreach(d; mod.type) {
+        d.dbg();
+    }
 
     writeln("Data section:");
     writeln("Enttries: ", mod.data.array.length);

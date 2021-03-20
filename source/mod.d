@@ -3,13 +3,14 @@ module sid.mod;
 import sid.obj.header;
 import sid.obj.core;
 import sid.obj.inst;
+import sid.obj.type;
 import sid.mem.alloc;
 import sid.mem.refcount;
 
 struct DisModule {
 
     RefCountedArray!DisInstruction code;
-    RefCountedArray!ubyte type;
+    RefCountedArray!DisTypeDesc type;
     RefCountedArray!ubyte data;
     RefCountedArray!ubyte link;
 
@@ -22,16 +23,20 @@ struct DisModule {
 
 
         code = RefCountedArray!DisInstruction(header.code_size);
-        type = RefCountedArray!ubyte(header.type_size);
+        type = RefCountedArray!DisTypeDesc(header.type_size);
         data = RefCountedArray!ubyte(header.data_size);
         link = RefCountedArray!ubyte(header.link_size);
 
-        for (int i = 0; i < header.code_size; i++) {
+        foreach (i; 0..header.code_size) {
             code[i] = DisInstruction(f);
         }
 
+
+        foreach (i; 0..header.type_size) {
+            type[i] = DisTypeDesc(f);
+        }
+
         /* These are wrong */
-        f.rawRead(type.array);
         f.rawRead(data.array);
 
         auto name_start = f.tell();
