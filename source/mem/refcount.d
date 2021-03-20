@@ -21,6 +21,7 @@ struct RefCountedArray(T) {
         if (refcount !is null) *refcount += 1;
     }
 
+
     void opAssign(RefCountedArray!T src) {
         *src.refcount += 1;
         decRef();
@@ -28,7 +29,6 @@ struct RefCountedArray(T) {
         array = src.array;
 
     }
-
 
     void decRef() {
         if (refcount !is null) {
@@ -38,4 +38,13 @@ struct RefCountedArray(T) {
             }
         }
     }
+    /* Array compatibility operators */
+
+    @property length() { return array.length; }
+    @property size_t opDollar() { return array.length; }
+
+    ref T opIndex(size_t i) { return array[i]; }
+
+    T[] opIndex() { return array[]; };
+
 };

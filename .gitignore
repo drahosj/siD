@@ -13,3 +13,4 @@ sid-test-*
 *.o
 *.obj
 *.lst
+*.swp

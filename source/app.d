@@ -2,6 +2,7 @@ import std.stdio;
 
 import sid.obj.core;
 import sid.obj.header;
+import sid.obj.inst;
 import sid.mod;
 
 void main(string[] args)
@@ -20,7 +21,7 @@ void main(string[] args)
 }
 
 void printBuf(T)(T[] buf) {
-    foreach(T b; buf) {
+    foreach(b; buf) {
         writef("%02X ", b);
     }
 }
@@ -45,33 +46,69 @@ void dbg(DisHeader header) {
     writeln("Entry Type: ", header.entry_type);
 }
 
+void dbg(DisInstruction inst) {
+    writef("%s\t",  Mnemonics[inst.opcode]);
+    dbg(inst.source_mode, inst.source_op_1, inst.source_op_2);
+    dbg(inst.middle_mode, inst.middle_op);
+    dbg(inst.dest_mode, inst.dest_op_1, inst.dest_op_2, "\t\t");
+    writef("MODE %02x\n", inst.address_mode);
+}
+
+void dbg(OpMode mode, int op_1, int op_2 = 0, string append=", ") {
+    switch (mode) {
+        case OpMode.IMMEDIATE:
+            writef("$%d", op_1);
+            write(append);
+            break;
+        case OpMode.INDIRECT_FP:
+            writef("%d(fp)", op_1);
+            write(append);
+            break;
+        case OpMode.INDIRECT_MP:
+            writef("%d(mp)", op_1);
+            write(append);
+            break;
+        case OpMode.DOUBLE_INDIRECT_FP:
+            writef("%d(%d(fp))", op_1, op_2);
+            write(append);
+            break;
+        case OpMode.DOUBLE_INDIRECT_MP:
+            writef("%d(%d(mp))", op_1, op_2);
+            write(append);
+            break;
+        case OpMode.NONE:
+            break;
+        default:
+            write("BAD ENCODING");
+            break;
+    }
+}
+
 void dbg(DisModule mod) {
     writeln("Module name: ", mod.name.array);
     writeln("Module header: ");
     mod.header.dbg();
 
     writeln("Code section:");
-    writeln("Size: ", mod.code.array.length);
-    printBuf(mod.code.array);
+    writeln("Instructions: ", mod.code.length);
+    foreach(i, inst; mod.code) {
+        writef("\t%d\t", i);
+        inst.dbg();
+    }
     writeln();
 
     writeln("Type section:");
-    writeln("Size: ", mod.type.array.length);
-    printBuf(mod.type.array);
-    writeln();
+    writeln("Type Declarations: ", mod.type.array.length);
 
     writeln("Data section:");
-    writeln("Size: ", mod.data.array.length);
-    printBuf(mod.data.array);
+    writeln("Enttries: ", mod.data.array.length);
     writeln();
 
     writeln("Name raw:");
     writeln("Size: ", mod.name.array.length);
-    printBuf(mod.name.array);
     writeln();
 
     writeln("Link section:");
-    writeln("Size: ", mod.link.array.length);
-    printBuf(mod.link.array);
+    writeln("Link entries: ", mod.link.array.length);
     writeln();
 }
