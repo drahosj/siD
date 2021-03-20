@@ -26,28 +26,9 @@ struct DisModule {
         data = RefCountedArray!ubyte(header.data_size);
         link = RefCountedArray!ubyte(header.link_size);
 
-        /* Paranoid maximum size is 2 + 4 + 8 + 8,
-           even though 2x30bit double indirect is technically not allowed,
-           same with 30bit op for middle */
-
-        ubyte[22] inst_buffer;
-        ulong buffered_bytes = 0;
         for (int i = 0; i < header.code_size; i++) {
-            ulong bytes_read = f.rawRead(inst_buffer[buffered_bytes..$]).length;
-            DisInstruction inst;
-            ulong inst_length = inst.parseFrom(inst_buffer[]);
-
-            code[i] = inst;
-
-            /* Shift extra bytes to beginning of buffer */
-            buffered_bytes = (buffered_bytes + bytes_read) - inst_length;
-            for (ulong j = 0; j < buffered_bytes; j++) {
-                inst_buffer[j] = inst_buffer[inst_length + j];
-            }
+            code[i] = DisInstruction(f);
         }
-
-        /* Seek backwards any over-read */
-        f.seek(f.tell() - buffered_bytes);
 
         /* These are wrong */
         f.rawRead(type.array);

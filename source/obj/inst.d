@@ -29,9 +29,12 @@ struct DisInstruction {
     int dest_op_1;
     int dest_op_2;
 
-    int parseFrom(ubyte[] stream) {
-        opcode = stream[0];
-        address_mode = stream[1];
+    this(F)(F f) {
+        ubyte[2] buf;
+        f.rawRead(buf[]);
+
+        opcode = buf[0];
+        address_mode = buf[1];
 
         switch ((address_mode & 0xc0) >> 6) {
             case 0:
@@ -99,38 +102,25 @@ struct DisInstruction {
                 break;
         }
 
-        int inst_length = 2;
-
         if (middle_mode != OpMode.NONE) {
-            middle_op = parse_op(stream[inst_length..$]);
-            inst_length += op_length(stream[inst_length..$]);
+            middle_op = f.read_op();
         }
 
+        if (source_mode != OpMode.NONE) {
+            source_op_1 = f.read_op();
+        }
         if ((source_mode == OpMode.DOUBLE_INDIRECT_MP) || 
                 (source_mode == OpMode.DOUBLE_INDIRECT_FP)) {
-            source_op_1 = parse_op(stream[inst_length..$]);
-            inst_length += op_length(stream[inst_length..$]);
-
-            source_op_2 = parse_op(stream[inst_length..$]);
-            inst_length += op_length(stream[inst_length..$]);
-        } else if (source_mode != OpMode.NONE) {
-            source_op_1 = parse_op(stream[inst_length..$]);
-            inst_length += op_length(stream[inst_length..$]);
+            source_op_2 = f.read_op();
         }
 
+        if (dest_mode != OpMode.NONE) {
+            dest_op_1 = f.read_op();
+        }
         if ((dest_mode == OpMode.DOUBLE_INDIRECT_MP) || 
                 (dest_mode == OpMode.DOUBLE_INDIRECT_FP)) {
-            dest_op_1 = parse_op(stream[inst_length..$]);
-            inst_length += op_length(stream[inst_length..$]);
-
-            dest_op_2 = parse_op(stream[inst_length..$]);
-            inst_length += op_length(stream[inst_length..$]);
-        } else if (dest_mode != OpMode.NONE) {
-            dest_op_1 = parse_op(stream[inst_length..$]);
-            inst_length += op_length(stream[inst_length..$]);
-        }
-        
-        return inst_length;
+            dest_op_2 = f.read_op();
+        }  
     };
 };
 
