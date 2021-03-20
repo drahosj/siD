@@ -32,11 +32,14 @@ T[] allocArray(T, A...)(size_t count, A args) {
     return ary;
 }
 
-void deallocate(void * ptr) {
-    free(ptr);
+void deallocate(T)(T[] ary) {
+    foreach(t; ary) {
+        destroy(t);
+    }
+    free(ary.ptr);
 }
 
-void deallocate(T)(T[] arr) {
-    writeln("Arr ptr ", arr.ptr);
-    free(arr.ptr);
+void deallocate(T)(T * ptr) {
+    destroy(*ptr);
+    free(ptr);
 }

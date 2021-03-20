@@ -19,6 +19,8 @@ void main(string[] args)
     DisModule *mod = allocate!DisModule(File(args[1]));
 
     dbg(*mod);
+
+    deallocate(mod);
 }
 
 void printBuf(T)(T[] buf) {
