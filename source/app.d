@@ -3,6 +3,7 @@ import std.stdio;
 import sid.obj.core;
 import sid.obj.header;
 import sid.obj.inst;
+import sid.mem.alloc;
 import sid.mod;
 
 void main(string[] args)
@@ -15,9 +16,9 @@ void main(string[] args)
     ObjectFile obj = ObjectFile(args[1]);
     obj.header.dbg();
 
-    DisModule mod = DisModule(File(args[1]));
+    DisModule *mod = allocate!DisModule(File(args[1]));
 
-    mod.dbg();
+    dbg(*mod);
 }
 
 void printBuf(T)(T[] buf) {

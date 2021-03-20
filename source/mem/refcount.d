@@ -6,8 +6,8 @@ struct RefCountedArray(T) {
     int * refcount;
     T[] array;
 
-    this(ulong count) {
-        array = allocArray!T(count);
+    this(Args...)(ulong count, Args args) {
+        array = allocArray!T(count, args);
         refcount = allocate!int();
 
         *refcount = 1;

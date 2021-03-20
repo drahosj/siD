@@ -1,23 +1,35 @@
 module sid.mem.alloc;
 
 import core.stdc.stdlib;
+import core.lifetime;
 import std.stdio;
 
-T * allocate(T)() {
-    void *ptr = malloc(T.sizeof);
-
+T * allocate(T, A...)(A a) {
+    T *ptr = cast(T *) malloc(T.sizeof);
     if (!ptr) assert(0, "Malloc failed!");
 
-    return cast(T *) ptr;
+    emplace(ptr, a);
+
+
+    return ptr;
 }
 
-T[] allocArray(T)(size_t count) {
+T[] allocArray(T, A...)(size_t count, A args) {
     assert(count != 0);
-    void *ptr = malloc(T.sizeof * count);
+
+    void * ptr = malloc(T.sizeof * count);
 
     if (!ptr) assert(0, "Malloc failed!");
 
-    return (cast(T *) ptr)[0..count];
+    T[] ary = (cast(T*) ptr)[0..count];
+
+
+    foreach(i; 0..count) {
+        emplace(&ary[i], args);
+    }
+
+
+    return ary;
 }
 
 void deallocate(void * ptr) {
