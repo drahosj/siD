@@ -25,7 +25,7 @@ struct RefCountedArray(T) {
     void opAssign(RefCountedArray!T src) {
         *src.refcount += 1;
         decRef();
-        *refcount = *src.refcount;
+        refcount = src.refcount;
         array = src.array;
 
     }

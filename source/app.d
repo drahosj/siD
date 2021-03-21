@@ -5,6 +5,7 @@ import sid.obj.header;
 import sid.obj.inst;
 import sid.obj.type;
 import sid.mem.alloc;
+import sid.mem.heap;
 import sid.mod;
 
 void main(string[] args)
@@ -17,7 +18,9 @@ void main(string[] args)
     ObjectFile obj = ObjectFile(args[1]);
     obj.header.dbg();
 
-    DisModule *mod = allocate!DisModule(File(args[1]));
+    BadHeap heap = BadHeap(4096 * 12);
+
+    DisModule *mod = allocate!DisModule(DisModule(File(args[1]), heap));
 
     dbg(*mod);
 
@@ -119,10 +122,10 @@ void dbg(DisModule mod) {
     }
 
     writeln("Data section:");
-    writeln("Enttries: ", mod.data.array.length);
     writeln();
 
     writeln("Name raw:");
+    printBuf(mod.name.array);
     writeln("Size: ", mod.name.array.length);
     writeln();
 
