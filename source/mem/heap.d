@@ -32,7 +32,7 @@ struct HeapItem {
 
         code = buf[0];
 
-        type = (code >> 8) & 0x0f;
+        type = (code >> 4) & 0x0f;
 
         count = code & 0x0f;
         if (count == 0) {

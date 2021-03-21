@@ -9,11 +9,12 @@ import sid.mem.refcount;
 import sid.mem.heap;
 import sid.endian;
 
+import sid.app;
+
 struct DisModule {
 
     RefCountedArray!DisInstruction code;
     RefCountedArray!DisTypeDesc type;
-    RefCountedArray!HeapItem data_items;
     RefCountedArray!ubyte link;
 
     RefCountedArray!char name;
@@ -31,7 +32,6 @@ struct DisModule {
 
         code = RefCountedArray!DisInstruction(header.code_size);
         type = RefCountedArray!DisTypeDesc(header.type_size);
-        data_items = RefCountedArray!HeapItem(header.data_size);
         link = RefCountedArray!ubyte(header.link_size);
 
         foreach (i; 0..header.code_size) {
@@ -42,27 +42,13 @@ struct DisModule {
             type[i] = DisTypeDesc(f);
         }
 
-        mp_offset = heap.getSize();
         ulong data_start = f.tell();
+        mp_offset = heap.allocate(header.data_size);
+        int data_filled;
 
-        /* First pass - allocate space in data segment */
-        foreach (i; 0..header.data_size) {
-            HeapItem item = HeapItem(f);
-            data_items[i] = item;
-            f.seek(f.tell() + item.operand_size);
-            heap.allocate(item.data_seg_size);
-        }
-        end_of_data = heap.getSize();
-        data_segment = heap.mem.array[mp_offset..end_of_data];
-
-        f.seek(data_start);
-
-        /* 2nd pass - allocate heap space for indirect data items (strings and
-         * arrays) and populate data values - direct values populated into data
-         * segment, pointers to allocated indirect items stored into data
-         * segment */
-        foreach (item_iter; 0..header.data_size) {
-            /* Still have to read and re-parse item to advance file pointer */
+        /* Heap size is declared. Single pass needed to populate data segment
+         * and allocate heap storage */
+        while (data_filled < header.data_size) {
             HeapItem item = HeapItem(f);
             switch (item.type) {
                 case ItemType.BYTE:
@@ -125,7 +111,20 @@ struct DisModule {
                 default:
                     break;
             }
+            dbg(item);
+            data_filled += item.data_seg_size;
+
+            ubyte[1] buf;
+            f.rawRead(buf);
+            if (buf[0] == 0) {
+                break;
+            } else {
+                f.seek(f.tell() - 1);
+            }
         }
+
+        end_of_data = heap.getSize();
+        data_segment = heap.mem.array[mp_offset..end_of_data];
 
         auto name_start = f.tell();
         ubyte[1] buf;

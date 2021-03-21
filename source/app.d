@@ -1,3 +1,5 @@
+module sid.app;
+
 import std.stdio;
 
 import sid.obj.core;
@@ -62,14 +64,15 @@ void dbg(DisInstruction inst) {
 }
 
 void dbg(DisTypeDesc desc) {
-    writefln("Index: %d", desc.desc_number);
-    writefln("Size: %d", desc.size);
-    writefln("Map size: %d", desc.number_ptrs);
-    write("Map: \"");
+    writefln("\tIndex: %d", desc.desc_number);
+    writefln("\tSize: %d", desc.size);
+    writefln("\tMap size: %d", desc.number_ptrs);
+    write("\tMap: \"");
     foreach (b; desc.map) {
         writef("%02x", b);
     }
     writeln("\"");
+    writeln();
 }
 
 void dbg(OpMode mode, int op_1, int op_2 = 0, string append=", ") {
@@ -122,6 +125,7 @@ void dbg(DisModule mod) {
     }
 
     writeln("Data section:");
+    writeln("Items: ", mod.header.data_size);
     writeln();
 
     writeln("Name raw:");
@@ -131,5 +135,17 @@ void dbg(DisModule mod) {
 
     writeln("Link section:");
     writeln("Link entries: ", mod.link.array.length);
+    writeln();
+}
+
+void dbg(HeapItem h) {
+    writefln("\tCode: %02x", h.code);
+    writefln("\tCount: %d", h.count);
+    writefln("\tOffset: %d", h.offset);
+    writefln("\tType: %d", h.type);
+
+    writefln("\tSize in data segment: %d", h.data_seg_size);
+    writefln("\tSize on heap: %d", h.heap_size);
+    writefln("\tOperand size in object file: %d", h.operand_size);
     writeln();
 }
