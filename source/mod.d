@@ -11,7 +11,7 @@ import sid.endian;
 
 import sid.app;
 
-struct DisModule {
+struct DisModule(H) {
 
     RefCountedArray!DisInstruction code;
     RefCountedArray!DisTypeDesc type;
@@ -24,11 +24,15 @@ struct DisModule {
     int mp_offset;
     int end_of_data;
 
-    ubyte[] data_segment;
+    ulong data_segment_file_start;
 
-    this(F, H)(F f, H heap) {
+
+    H heap;
+
+    this(F)(F f, H h) {
         header = DisHeader(f);
 
+        heap = h;
 
         code = RefCountedArray!DisInstruction(header.code_size);
         type = RefCountedArray!DisTypeDesc(header.type_size);
@@ -42,7 +46,7 @@ struct DisModule {
             type[i] = DisTypeDesc(f);
         }
 
-        ulong data_start = f.tell();
+        data_segment_file_start = f.tell();
         mp_offset = heap.allocate(header.data_size);
         int data_filled;
 
@@ -55,7 +59,7 @@ struct DisModule {
                     foreach (i; 0..item.count) {
                         byte[1] buf;
                         f.rawRead(buf[]);
-                        data_segment[item.offset + i] = buf[0];
+                        *heap_ptr!ubyte(item.offset + 1) = buf[0];
                     }
                     break;
                 case ItemType.WORD:
@@ -111,7 +115,6 @@ struct DisModule {
                 default:
                     break;
             }
-            dbg(item);
             data_filled += item.data_seg_size;
 
             ubyte[1] buf;
@@ -124,9 +127,8 @@ struct DisModule {
         }
 
         end_of_data = heap.getSize();
-        data_segment = heap.mem.array[mp_offset..end_of_data];
 
-        auto name_start = f.tell();
+        ulong name_start = f.tell();
         ubyte[1] buf;
         ulong name_end;
 
@@ -140,5 +142,9 @@ struct DisModule {
         f.rawRead(name.array);
 
         f.rawRead(link.array);
+    }
+
+    T * heap_ptr(T)(int offset) {
+        return heap.ptr!T(offset);
     }
 };

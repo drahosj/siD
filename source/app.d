@@ -22,9 +22,13 @@ void main(string[] args)
 
     BadHeap heap = BadHeap(4096 * 12);
 
-    DisModule *mod = allocate!DisModule(DisModule(File(args[1]), heap));
+    File f = File(args[1]);
+    DisModule!BadHeap *mod = 
+        allocate!(DisModule!BadHeap)(DisModule!BadHeap(f, heap));
 
     dbg(*mod);
+
+    print_data!BadHeap(*mod, f);
 
     deallocate(mod);
 }
@@ -105,7 +109,7 @@ void dbg(OpMode mode, int op_1, int op_2 = 0, string append=", ") {
     }
 }
 
-void dbg(DisModule mod) {
+void dbg(H)(DisModule!H mod) {
     writeln("Module name: ", mod.name.array);
     writeln("Module header: ");
     mod.header.dbg();
@@ -148,4 +152,36 @@ void dbg(HeapItem h) {
     writefln("\tSize on heap: %d", h.heap_size);
     writefln("\tOperand size in object file: %d", h.operand_size);
     writeln();
+}
+
+void print_data(H)(DisModule!H mod, File f) {
+    writeln("Module data segment: ");
+    f.seek(mod.data_segment_file_start);
+    HeapItem item = HeapItem(f);
+    while (item.code != 0) {
+        writeln("Data Item:");
+        dbg(item);
+        switch (item.type) {
+            case ItemType.WORD:
+                writefln("\tItem is a word: %d", 
+                        *mod.heap.ptr!int(item.offset));
+                break;
+            case ItemType.STRING:
+                writeln("\tItem is a string.");
+                int pointer = *mod.heap_ptr!int(item.offset);
+                writefln("\tPointer value: %d", pointer);
+                write("\tString at pointer: ");
+                foreach (i; 0..item.count) {
+                    writef("%c", *mod.heap_ptr!char(pointer++));
+                }
+                writeln();
+                writeln();
+
+                break;
+            default:
+                break;
+        }
+        f.seek(f.tell() + item.operand_size);
+        item = HeapItem(f);
+    }
 }
