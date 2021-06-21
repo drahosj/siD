@@ -6,6 +6,7 @@ import sid.obj.core;
 import sid.obj.header;
 import sid.obj.inst;
 import sid.obj.type;
+import sid.obj.link;
 import sid.mem.alloc;
 import sid.mem.heap;
 import sid.mod;
@@ -111,6 +112,7 @@ void dbg(OpMode mode, int op_1, int op_2 = 0, string append=", ") {
 
 void dbg(H)(DisModule!H mod) {
     writeln("Module name: ", mod.name.array);
+    writeln("Name len: ", mod.name.array.length);
     writeln("Module header: ");
     mod.header.dbg();
 
@@ -140,6 +142,11 @@ void dbg(H)(DisModule!H mod) {
     writeln("Link section:");
     writeln("Link entries: ", mod.link.array.length);
     writeln();
+
+    foreach(e; mod.link.array) {
+        e.dbg();
+        writeln();
+    }
 }
 
 void dbg(HeapItem h) {
@@ -152,6 +159,13 @@ void dbg(HeapItem h) {
     writefln("\tSize on heap: %d", h.heap_size);
     writefln("\tOperand size in object file: %d", h.operand_size);
     writeln();
+}
+
+void dbg(DisLinkEntry e) {
+    writefln("\tLink no.: %d", e.link_number);
+    writefln("\tName: %s", e.name.array);
+    writefln("\tpc: %02x", e.pc);
+    writefln("\tsig hash: %08x", e.sig);
 }
 
 void print_data(H)(DisModule!H mod, File f) {

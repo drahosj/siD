@@ -4,6 +4,7 @@ import sid.obj.header;
 import sid.obj.core;
 import sid.obj.inst;
 import sid.obj.type;
+import sid.obj.link;
 import sid.mem.alloc;
 import sid.mem.refcount;
 import sid.mem.heap;
@@ -15,7 +16,7 @@ struct DisModule(H) {
 
     RefCountedArray!DisInstruction code;
     RefCountedArray!DisTypeDesc type;
-    RefCountedArray!ubyte link;
+    RefCountedArray!DisLinkEntry link;
 
     RefCountedArray!char name;
 
@@ -25,7 +26,7 @@ struct DisModule(H) {
     int end_of_data;
 
     ulong data_segment_file_start;
-
+    ulong link_segment_file_start;
 
     H heap;
 
@@ -36,7 +37,7 @@ struct DisModule(H) {
 
         code = RefCountedArray!DisInstruction(header.code_size);
         type = RefCountedArray!DisTypeDesc(header.type_size);
-        link = RefCountedArray!ubyte(header.link_size);
+        link = RefCountedArray!DisLinkEntry(header.link_size);
 
         foreach (i; 0..header.code_size) {
             code[i] = DisInstruction(f);
@@ -134,14 +135,18 @@ struct DisModule(H) {
 
         do {
             f.rawRead(buf);
-            name_end = f.tell() + 1;
         } while (buf[0] != 0);
+        name_end = f.tell();
         f.seek(name_start);
 
         name = RefCountedArray!char(name_end - name_start);
         f.rawRead(name.array);
 
-        f.rawRead(link.array);
+        link_segment_file_start = f.tell();
+
+        foreach (i; 0..header.link_size) {
+            link[i] = DisLinkEntry(f);           
+        }
     }
 
     T * heap_ptr(T)(int offset) {

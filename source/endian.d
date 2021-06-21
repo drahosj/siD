@@ -9,6 +9,15 @@ uint be_to_uint(ubyte[] buf) {
 	return val;
 }
 
+int be_to_int(ubyte[] buf) {
+	uint val =
+		(buf[0] << 24)  |
+		(buf[1] << 16)  |
+		(buf[2] << 8)   |
+		buf[3];
+	return val;
+}
+
 ulong be_to_ulong(ubyte[] buf) {
     ulong[8] lbuf;
     foreach(i, b; buf) {
