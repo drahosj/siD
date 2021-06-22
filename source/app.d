@@ -10,6 +10,7 @@ import sid.obj.link;
 import sid.mem.alloc;
 import sid.mem.heap;
 import sid.mod;
+import sid.frame;
 
 void main(string[] args)
 {
@@ -30,6 +31,9 @@ void main(string[] args)
     dbg(*mod);
 
     print_data!BadHeap(*mod, f);
+
+    executeFrame(*mod, mod.link[0].pc);
+
 
     deallocate(mod);
 }
